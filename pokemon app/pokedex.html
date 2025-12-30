@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokéFinder App</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --accent-color: #ff5252;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Main Container */
+        .container {
+            width: 100%;
+            max-width: 450px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Search Section */
+        .search-box {
+            display: flex;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 30px;
+            background: white;
+            padding: 5px;
+        }
+
+        input {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            border-radius: 30px 0 0 30px;
+        }
+
+        button#search-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        button#search-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Pokemon Card */
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: none; /* Hidden by default */
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .hp-tag {
+            background: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .poke-img-container {
+            margin: 0 auto;
+            width: 200px;
+            height: 200px;
+            position: relative;
+        }
+
+        .poke-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));
+            transition: transform 0.3s ease;
+        }
+
+        .poke-img:hover {
+            transform: scale(1.15) translateY(-5px);
+            cursor: pointer;
+        }
+
+        .poke-name {
+            font-size: 2rem;
+            text-transform: capitalize;
+            margin: 15px 0 5px;
+            color: #333;
+        }
+
+        .types {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .type-badge {
+            padding: 5px 15px;
+            border-radius: 15px;
+            color: white;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Stats Section */
+        .stats-container {
+            text-align: left;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 15px;
+            border-radius: 15px;
+        }
+
+        .stat-row {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .stat-name {
+            width: 70px;
+            font-weight: bold;
+            color: #555;
+            text-transform: uppercase;
+            font-size: 11px;
+        }
+
+        .stat-val {
+            width: 30px;
+            text-align: right;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .progress-bg {
+            flex: 1;
+            height: 8px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            background: #4caf50; /* Default, changes via JS */
+            width: 0;
+            transition: width 1s ease-out;
+        }
+
+        /* Recent Searches */
+        .recent-searches {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .recent-tag {
+            background: #e0e0e0;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            color: #555;
+            transition: background 0.2s;
+        }
+
+        .recent-tag:hover {
+            background: #d1d1d1;
+        }
+
+        /* Utilities */
+        .error-msg {
+            color: #d32f2f;
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        /* Animations */
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="text-align: center;">
+        <h1 style="color: #444; margin-bottom: 5px;">PokéFinder</h1>
+        <p style="color: #777; font-size: 0.9rem;">Search by Name or ID</p>
+    </div>
+
+    <!-- Search Input -->
+    <div class="search-box">
+        <input type="text" id="search-input" placeholder="e.g., Pikachu, 25">
+        <button id="search-btn">Search</button>
+    </div>
+
+    <!-- Recent Searches -->
+    <div id="recent-container" class="recent-searches"></div>
+
+    <!-- Error & Loader -->
+    <p class="error-msg" id="error-msg">Pokémon not found!</p>
+    <div class="loader" id="loader"></div>
+
+    <!-- Main Card -->
+    <div class="card" id="pokemon-card">
+        <div class="card-header">
+            <span style="font-weight: bold; color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.3);" id="poke-id">#000</span>
+            <span class="hp-tag" id="poke-hp">HP 00</span>
+        </div>
+
+        <div class="poke-img-container">
+            <img src="" alt="Pokemon" class="poke-img" id="poke-img">
+        </div>
+
+        <h2 class="poke-name" id="poke-name">Name</h2>
+        
+        <div class="types" id="poke-types">
+            <!-- Type badges injected here -->
+        </div>
+
+        <div class="stats-container" id="stats-container">
+            <!-- Stats injected here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Configuration & Elements ---
+    const searchBtn = document.getElementById('search-btn');
+    const searchInput = document.getElementById('search-input');
+    const card = document.getElementById('pokemon-card');
+    const errorMsg = document.getElementById('error-msg');
+    const loader = document.getElementById('loader');
+    const recentContainer = document.getElementById('recent-container');
+
+    // Type Color Mapping
+    const typeColors = {
+        normal: '#A8A77A',
+        fire: '#EE8130',
+        water: '#6390F0',
+        electric: '#F7D02C',
+        grass: '#7AC74C',
+        ice: '#96D9D6',
+        fighting: '#C22E28',
+        poison: '#A33EA1',
+        ground: '#E2BF65',
+        flying: '#A98FF3',
+        psychic: '#F95587',
+        bug: '#A6B91A',
+        rock: '#B6A136',
+        ghost: '#735797',
+        dragon: '#6F35FC',
+        steel: '#B7B7CE',
+        fairy: '#D685AD'
+    };
+
+    // --- Event Listeners ---
+    searchBtn.addEventListener('click', () => handleSearch(searchInput.value));
+    
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSearch(searchInput.value);
+    });
+
+    // Load recent searches on start
+    document.addEventListener('DOMContentLoaded', loadRecentSearches);
+
+    // --- Main Logic ---
+
+    async function handleSearch(query) {
+        const searchTerm = query.trim().toLowerCase();
+        if (!searchTerm) return;
+
+        // UI Reset
+        errorMsg.style.display = 'none';
+        card.style.display = 'none';
+        loader.style.display = 'block';
+
+        try {
+            // NOTE: PokeAPI is free and open. No API key required.
+            const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${searchTerm}`);
+
+            if (!response.ok) {
+                throw new Error('Pokemon not found');
+            }
+
+            const data = await response.json();
+            
+            // Artificial delay to show off the loader animation (optional)
+            setTimeout(() => {
+                displayPokemon(data);
+                saveToRecent(data.name);
+                loader.style.display = 'none';
+            }, 500);
+
+        } catch (error) {
+            loader.style.display = 'none';
+            errorMsg.style.display = 'block';
+            errorMsg.textContent = "Pokémon not found. Please try again.";
+        }
+    }
+
+    function displayPokemon(data) {
+        // 1. Image
+        const img = document.getElementById('poke-img');
+        img.src = data.sprites.other['official-artwork'].front_default || data.sprites.front_default;
+        
+        // 2. Text Data
+        document.getElementById('poke-name').textContent = data.name;
+        document.getElementById('poke-id').textContent = `#${data.id.toString().padStart(3, '0')}`;
+        
+        // 3. Types & Theme Color
+        const typesContainer = document.getElementById('poke-types');
+        typesContainer.innerHTML = '';
+        
+        const mainType = data.types[0].type.name;
+        const themeColor = typeColors[mainType] || '#777';
+        
+        // Set Card Background Gradient based on type
+        card.style.background = `radial-gradient(circle at 50% 0%, ${themeColor} 36%, #ffffff 36%)`;
+
+        data.types.forEach(t => {
+            const span = document.createElement('span');
+            span.textContent = t.type.name;
+            span.className = 'type-badge';
+            span.style.backgroundColor = typeColors[t.type.name] || '#777';
+            typesContainer.appendChild(span);
+        });
+
+        // 4. HP (Find HP stat specifically)
+        const hpStat = data.stats.find(s => s.stat.name === 'hp').base_stat;
+        document.getElementById('poke-hp').textContent = `HP ${hpStat}`;
+        document.getElementById('poke-hp').style.color = themeColor;
+
+        // 5. Base Stats
+        renderStats(data.stats, themeColor);
+
+        // Show Card
+        card.style.display = 'block';
+    }
+
+    function renderStats(stats, color) {
+        const statsContainer = document.getElementById('stats-container');
+        statsContainer.innerHTML = '';
+
+        stats.forEach(stat => {
+            const row = document.createElement('div');
+            row.className = 'stat-row';
+            
+            // Clean up stat names (e.g., "special-attack" -> "Sp. Atk")
+            let statName = stat.stat.name;
+            if(statName === 'special-attack') statName = 'sp. atk';
+            if(statName === 'special-defense') statName = 'sp. def';
+
+            // Calculate width (Base stats usually go up to 255)
+            const widthPercentage = (stat.base_stat / 255) * 100;
+
+            row.innerHTML = `
+                <div class="stat-name">${statName}</div>
+                <div class="stat-val">${stat.base_stat}</div>
+                <div class="progress-bg">
+                    <div class="progress-bar" style="width: 0%; background-color: ${color}"></div>
+                </div>
+            `;
+            
+            statsContainer.appendChild(row);
+
+            // Animate bar after append
+            setTimeout(() => {
+                row.querySelector('.progress-bar').style.width = `${widthPercentage}%`;
+            }, 50);
+        });
+    }
+
+    // --- Local Storage Helpers ---
+
+    function saveToRecent(name) {
+        let recents = JSON.parse(localStorage.getItem('poke_recents')) || [];
+        
+        // Remove duplicate if exists and add to front
+        recents = recents.filter(r => r !== name);
+        recents.unshift(name);
+        
+        // Limit to 5
+        if (recents.length > 5) recents.pop();
+
+        localStorage.setItem('poke_recents', JSON.stringify(recents));
+        loadRecentSearches();
+    }
+
+    function loadRecentSearches() {
+        const recents = JSON.parse(localStorage.getItem('poke_recents')) || [];
+        recentContainer.innerHTML = '';
+
+        recents.forEach(name => {
+            const tag = document.createElement('span');
+            tag.className = 'recent-tag';
+            tag.textContent = name;
+            tag.onclick = () => {
+                searchInput.value = name;
+                handleSearch(name);
+            };
+            recentContainer.appendChild(tag);
+        });
+    }
+</script>
+
+</body>
+</html>
